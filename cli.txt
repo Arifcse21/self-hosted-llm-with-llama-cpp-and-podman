@@ -1,0 +1,38 @@
+podman run -d \
+  --name qwen3.6-4b \
+  -v ./models/qwen3.6-4b.gguf:/locallm/model.gguf:z \
+  -p 7272:8080 \
+  -e LLAMA_CTX=8192 \
+  -e LLAMA_THREADS=4 \
+  local-qwen3.6-4b
+
+
+podman build -t llama-cpu:latest -f Containerfile.dev .
+
+podman run -d \
+  --name llama-server-cpu \
+  --network=host \
+  -p 11434:11434 \
+  -v $(pwd)/models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf:/models/qwen2.5-coder-7b-instruct-q4_k_m.gguf:ro,z \
+  llama-cpu:latest \
+    --host 0.0.0.0 \
+    --port 11434 \
+    --model /models/qwen2.5-coder-7b-instruct-q4_k_m.gguf \
+    --ctx-size 8192 \
+    --threads $(nproc) \
+    --n-gpu-layers 0 \
+    --parallel 1
+
+curl http://localhost:11434/v1/models
+
+
+cd ~/.config/systemd/user/
+podman generate systemd --new --name qwen3-4b --files
+
+# Reload configurations
+systemctl --user daemon-reload
+
+# Enable the autostart hook
+systemctl --user enable --now container-qwen3-4b.service
+
+sudo loginctl enable-linger $USER

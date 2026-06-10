@@ -1,0 +1,15 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y \
+    build-essential cmake git libopenblas-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 https://github.com/ggerganov/llama.cpp /opt/llama.cpp
+
+WORKDIR /opt/llama.cpp
+RUN cmake -B build -DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS \
+    && cmake --build build --config Release -j$(nproc) --target llama-server
+
+EXPOSE 11434
+
+ENTRYPOINT ["/opt/llama.cpp/build/bin/llama-server"]
