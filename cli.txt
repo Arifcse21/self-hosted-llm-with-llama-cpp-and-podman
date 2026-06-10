@@ -12,13 +12,12 @@ podman build -t llama-cpu:latest -f Containerfile.dev .
 podman run -d \
   --name llama-server-cpu \
   --network=host \
-  -p 11434:11434 \
   -v $(pwd)/models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf:/models/qwen2.5-coder-7b-instruct-q4_k_m.gguf:ro,z \
   llama-cpu:latest \
-    --host 0.0.0.0 \
+    --host 127.0.0.1 \
     --port 11434 \
     --model /models/qwen2.5-coder-7b-instruct-q4_k_m.gguf \
-    --ctx-size 8192 \
+    --ctx-size 16384 \
     --threads $(nproc) \
     --n-gpu-layers 0 \
     --parallel 1
